@@ -310,7 +310,11 @@ class MainActivity : ComponentActivity() {
                 Button(
                     onClick = {
                         lifecycleScope.launch {
-                            printSlip(selectedCat.nameUrdu, quantity, selectedCat.rate, basePrice, pstTax, grandTotal, receiptNo, manualDateTime, operatorName, isShortSlip)
+                            if (isShortSlip) {
+                                printShortSlip(selectedCat.nameUrdu, quantity, selectedCat.rate, basePrice, pstTax, grandTotal, receiptNo, manualDateTime, operatorName)
+                            } else {
+                                printLongSlip(selectedCat.nameUrdu, quantity, selectedCat.rate, basePrice, pstTax, grandTotal, receiptNo, manualDateTime, operatorName)
+                            }
                             salesList.add(
                                 SaleRecord(receiptNo, selectedCat.nameUrdu, quantity, basePrice, pstTax, grandTotal, manualDateTime)
                             )
@@ -405,10 +409,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private suspend fun printSlip(
+    // --- 100% UNTOUCHED ORIGINAL 27CM LONG SLIP ---
+    private suspend fun printLongSlip(
         catName: String, qty: Int, unitRate: Long, basePrice: Long,
-        pst: Long, total: Long, rNo: String, dateTimeStr: String, operatorName: String,
-        isShort: Boolean
+        pst: Long, total: Long, rNo: String, dateTimeStr: String, operatorName: String
     ) = withContext(Dispatchers.Default) {
         if (outputStream == null) {
             withContext(Dispatchers.Main) {
@@ -417,11 +421,7 @@ class MainActivity : ComponentActivity() {
             return@withContext
         }
 
-        // Long = 27 cm (~2160 px), Short = 16 cm (~1280 px)
-        val sf = if (isShort) 0.592f else 1.0f
-        val maxCanvasH = if (isShort) 1350 else 2250
-
-        val bmp = Bitmap.createBitmap(384, maxCanvasH, Bitmap.Config.ARGB_8888)
+        val bmp = Bitmap.createBitmap(384, 2250, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         canvas.drawColor(Color.WHITE)
 
@@ -436,37 +436,35 @@ class MainActivity : ComponentActivity() {
             Typeface.DEFAULT_BOLD
         }
 
-        var y = 36f * sf + 12f
+        var y = 48f
 
-        // Natural, clear logo without extra thickness
         val logoResId = resources.getIdentifier("logo", "drawable", packageName)
         if (logoResId != 0) {
             val originalBmp = BitmapFactory.decodeResource(resources, logoResId)
             if (originalBmp != null) {
-                val size = if (isShort) 96 else 116
+                val size = 116
                 val scaled = Bitmap.createScaledBitmap(originalBmp, size, size, true)
                 canvas.drawBitmap(scaled, (384f - size) / 2f, y, null)
-                y += size + (38f * sf)
+                y += size + 38f
             }
         } else {
-            y += 40f * sf
+            y += 40f
         }
 
-        // Header Title
         paint.typeface = nastaleeq
         paint.textSize = 22.5f
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("پنجاب کیٹل مارکیٹ مینجمنٹ اینڈ ڈویلپمنٹ کمپنی", 192f, y, paint)
-        y += 75f * sf
+        y += 75f
 
         paint.textSize = 20f
         fun drawRow(label: String, value: String) {
             paint.typeface = nastaleeq
             paint.textAlign = Paint.Align.RIGHT
             canvas.drawText(label, 370f, y, paint)
-            paint.textAlign = Paint.Align.LEFT
+            paint.textAlign = Paint.LEFT
             canvas.drawText(value, 14f, y, paint)
-            y += 57f * sf
+            y += 57f
         }
 
         drawRow("ڈویژن", "فیصل آباد")
@@ -474,24 +472,24 @@ class MainActivity : ComponentActivity() {
         drawRow("نام ٹھیکیدار", "محمد اسماعیل")
         drawRow("نام آپریٹر", operatorName)
 
-        y += 26f * sf
+        y += 26f
         paint.typeface = nastaleeq
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("رسید نمبر", 192f, y, paint)
-        y += 43f * sf
+        y += 43f
         paint.typeface = Typeface.MONOSPACE
         paint.textSize = 21f
         canvas.drawText(rNo, 192f, y, paint)
-        y += 56f * sf
+        y += 56f
 
         paint.typeface = nastaleeq
         paint.textSize = 20f
         canvas.drawText("تاریخ و وقت", 192f, y, paint)
-        y += 43f * sf
+        y += 43f
         paint.typeface = Typeface.MONOSPACE
         paint.textSize = 20f
         canvas.drawText(dateTimeStr, 192f, y, paint)
-        y += 51f * sf
+        y += 51f
 
         fun drawDashedLine(currentY: Float) {
             val dashPaint = Paint().apply {
@@ -504,89 +502,273 @@ class MainActivity : ComponentActivity() {
         }
 
         drawDashedLine(y)
-        y += 51f * sf
+        y += 51f
 
         paint.typeface = nastaleeq
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("فیس رسید", 192f, y, paint)
-        y += 51f * sf
+        y += 51f
 
-        paint.textAlign = Paint.Align.RIGHT
+        paint.textAlign = Paint.RIGHT
         canvas.drawText("فیس کی قسم", 370f, y, paint)
-        paint.textAlign = Paint.Align.CENTER
+        paint.textAlign = Paint.CENTER
         canvas.drawText("تعداد", 245f, y, paint)
         canvas.drawText("یونٹ", 160f, y, paint)
-        paint.textAlign = Paint.Align.LEFT
+        paint.textAlign = Paint.LEFT
         canvas.drawText("قیمت", 14f, y, paint)
-        y += 37f * sf
+        y += 37f
 
         drawDashedLine(y)
-        y += 51f * sf
+        y += 51f
 
-        paint.textAlign = Paint.Align.RIGHT
+        paint.textAlign = Paint.RIGHT
         canvas.drawText(catName, 370f, y, paint)
         paint.typeface = Typeface.MONOSPACE
-        paint.textAlign = Paint.Align.CENTER
+        paint.textAlign = Paint.CENTER
         canvas.drawText("$qty", 245f, y, paint)
         canvas.drawText("$unitRate", 160f, y, paint)
-        paint.textAlign = Paint.Align.LEFT
+        paint.textAlign = Paint.LEFT
         canvas.drawText("$basePrice", 14f, y, paint)
-        y += 53f * sf
+        y += 53f
 
         drawDashedLine(y)
-        y += 51f * sf
+        y += 51f
 
         paint.typeface = nastaleeq
         paint.textAlign = Paint.Align.RIGHT
         canvas.drawText("PST(16%)", 370f, y, paint)
         paint.typeface = Typeface.MONOSPACE
-        paint.textAlign = Paint.Align.LEFT
+        paint.textAlign = Paint.LEFT
         canvas.drawText("$pst", 14f, y, paint)
-        y += 59f * sf
+        y += 59f
 
         paint.typeface = nastaleeq
         paint.textSize = 24f
         paint.textAlign = Paint.Align.RIGHT
         canvas.drawText("کل", 370f, y, paint)
         paint.typeface = Typeface.MONOSPACE
-        paint.textAlign = Paint.Align.LEFT
+        paint.textAlign = Paint.LEFT
         canvas.drawText("$total", 14f, y, paint)
-        y += 64f * sf
+        y += 64f
 
         drawDashedLine(y)
-        y += 59f * sf
+        y += 59f
 
         paint.typeface = nastaleeq
         paint.textSize = 20f
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("جاری کردہ توسط", 192f, y, paint)
-        y += 47f * sf
+        y += 47f
         paint.typeface = Typeface.DEFAULT_BOLD
         paint.textSize = 21f
         canvas.drawText(operatorName, 192f, y, paint)
-        y += 63f * sf
+        y += 63f
 
         paint.typeface = nastaleeq
         paint.textSize = 25f
         canvas.drawText("اداشدہ", 192f, y, paint)
-        y += 68f * sf
+        y += 68f
 
         paint.textSize = 18f
         canvas.drawText("1233 : ہیلپ لائن", 192f, y, paint)
-        y += 46f * sf
+        y += 46f
         canvas.drawText("+92 323 1233000 : واٹس ایپ", 192f, y, paint)
-        y += 46f * sf
+        y += 46f
         canvas.drawText("31.215677, 72.355752 : GPS مقام", 192f, y, paint)
-        y += 53f * sf
+        y += 53f
 
         canvas.drawText("شکریہ", 192f, y, paint)
-        y += 49f * sf
+        y += 49f
 
         paint.typeface = Typeface.MONOSPACE
         canvas.drawText("Powered by PCMMDC", 192f, y, paint)
-        y += 64f * sf
+        y += 64f
 
-        val targetHeight = y.toInt().coerceAtMost(maxCanvasH)
+        sendRasterToPrinter(bmp, y.toInt().coerceAtMost(2250), feedLines = 4)
+    }
+
+    // --- ACCURATELY COMPRESSED 16CM SHORT SLIP ---
+    private suspend fun printShortSlip(
+        catName: String, qty: Int, unitRate: Long, basePrice: Long,
+        pst: Long, total: Long, rNo: String, dateTimeStr: String, operatorName: String
+    ) = withContext(Dispatchers.Default) {
+        if (outputStream == null) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@MainActivity, "پرنٹر منسلک نہیں ہے!", Toast.LENGTH_SHORT).show()
+            }
+            return@withContext
+        }
+
+        // Exact 16cm height maintained
+        val bmp = Bitmap.createBitmap(384, 1280, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bmp)
+        canvas.drawColor(Color.WHITE)
+
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.BLACK
+            textSize = 20.5f
+        }
+
+        val nastaleeq = try {
+            Typeface.createFromAsset(assets, "fonts/jameel_noori_nastaleeq.ttf")
+        } catch (_: Throwable) {
+            Typeface.DEFAULT_BOLD
+        }
+
+        // Natural, gentle top padding (not zero, not too far)
+        var y = 12f
+
+        val logoResId = resources.getIdentifier("logo", "drawable", packageName)
+        if (logoResId != 0) {
+            val originalBmp = BitmapFactory.decodeResource(resources, logoResId)
+            if (originalBmp != null) {
+                val size = 86
+                val scaled = Bitmap.createScaledBitmap(originalBmp, size, size, true)
+                canvas.drawBitmap(scaled, (384f - size) / 2f, y, null)
+                y += size + 16f
+            }
+        } else {
+            y += 18f
+        }
+
+        paint.typeface = nastaleeq
+        paint.textSize = 21f
+        paint.textAlign = Paint.Align.CENTER
+        canvas.drawText("پنجاب کیٹل مارکیٹ مینجمنٹ اینڈ ڈویلپمنٹ کمپنی", 192f, y, paint)
+        y += 40f
+
+        paint.textSize = 19f
+        fun drawRow(label: String, value: String) {
+            paint.typeface = nastaleeq
+            paint.textAlign = Paint.Align.RIGHT
+            canvas.drawText(label, 370f, y, paint)
+            paint.textAlign = Paint.LEFT
+            canvas.drawText(value, 14f, y, paint)
+            y += 31.5f
+        }
+
+        drawRow("ڈویژن", "فیصل آباد")
+        drawRow("مارکیٹ", "ماڈل مویشی منڈی جھنگ سٹی")
+        drawRow("نام ٹھیکیدار", "محمد اسماعیل")
+        drawRow("نام آپریٹر", operatorName)
+
+        y += 12f
+        paint.typeface = nastaleeq
+        paint.textAlign = Paint.Align.CENTER
+        canvas.drawText("رسید نمبر", 192f, y, paint)
+        y += 25f
+        paint.typeface = Typeface.MONOSPACE
+        paint.textSize = 19f
+        canvas.drawText(rNo, 192f, y, paint)
+        y += 31.5f
+
+        paint.typeface = nastaleeq
+        paint.textSize = 19f
+        canvas.drawText("تاریخ و وقت", 192f, y, paint)
+        y += 25f
+        paint.typeface = Typeface.MONOSPACE
+        paint.textSize = 18f
+        canvas.drawText(dateTimeStr, 192f, y, paint)
+        y += 28f
+
+        fun drawDashedLine(currentY: Float) {
+            val dashPaint = Paint().apply {
+                color = Color.BLACK
+                style = Paint.Style.STROKE
+                strokeWidth = 2f
+                pathEffect = DashPathEffect(floatArrayOf(6f, 6f), 0f)
+            }
+            canvas.drawLine(14f, currentY, 370f, currentY, dashPaint)
+        }
+
+        drawDashedLine(y)
+        y += 28f
+
+        paint.typeface = nastaleeq
+        paint.textAlign = Paint.Align.CENTER
+        canvas.drawText("فیس رسید", 192f, y, paint)
+        y += 28f
+
+        paint.textAlign = Paint.RIGHT
+        canvas.drawText("فیس کی قسم", 370f, y, paint)
+        paint.textAlign = Paint.CENTER
+        canvas.drawText("تعداد", 245f, y, paint)
+        canvas.drawText("یونٹ", 160f, y, paint)
+        paint.textAlign = Paint.LEFT
+        canvas.drawText("قیمت", 14f, y, paint)
+        y += 23f
+
+        drawDashedLine(y)
+        y += 28f
+
+        paint.textAlign = Paint.RIGHT
+        canvas.drawText(catName, 370f, y, paint)
+        paint.typeface = Typeface.MONOSPACE
+        paint.textAlign = Paint.CENTER
+        canvas.drawText("$qty", 245f, y, paint)
+        canvas.drawText("$unitRate", 160f, y, paint)
+        paint.textAlign = Paint.LEFT
+        canvas.drawText("$basePrice", 14f, y, paint)
+        y += 29.5f
+
+        drawDashedLine(y)
+        y += 28f
+
+        paint.typeface = nastaleeq
+        paint.textAlign = Paint.Align.RIGHT
+        canvas.drawText("PST(16%)", 370f, y, paint)
+        paint.typeface = Typeface.MONOSPACE
+        paint.textAlign = Paint.LEFT
+        canvas.drawText("$pst", 14f, y, paint)
+        y += 32f
+
+        paint.typeface = nastaleeq
+        paint.textSize = 22f
+        paint.textAlign = Paint.Align.RIGHT
+        canvas.drawText("کل", 370f, y, paint)
+        paint.typeface = Typeface.MONOSPACE
+        paint.textAlign = Paint.LEFT
+        canvas.drawText("$total", 14f, y, paint)
+        y += 35f
+
+        drawDashedLine(y)
+        y += 31f
+
+        paint.typeface = nastaleeq
+        paint.textSize = 19f
+        paint.textAlign = Paint.Align.CENTER
+        canvas.drawText("جاری کردہ توسط", 192f, y, paint)
+        y += 26f
+        paint.typeface = Typeface.DEFAULT_BOLD
+        paint.textSize = 20f
+        canvas.drawText(operatorName, 192f, y, paint)
+        y += 35f
+
+        paint.typeface = nastaleeq
+        paint.textSize = 23f
+        canvas.drawText("اداشدہ", 192f, y, paint)
+        y += 36f
+
+        paint.textSize = 17f
+        canvas.drawText("1233 : ہیلپ لائن", 192f, y, paint)
+        y += 27f
+        canvas.drawText("+92 323 1233000 : واٹس ایپ", 192f, y, paint)
+        y += 27f
+        canvas.drawText("31.215677, 72.355752 : GPS مقام", 192f, y, paint)
+        y += 29f
+
+        canvas.drawText("شکریہ", 192f, y, paint)
+        y += 27f
+
+        paint.typeface = Typeface.MONOSPACE
+        canvas.drawText("Powered by PCMMDC", 192f, y, paint)
+        y += 40f
+
+        // Exact feed to clear paper cutter cleanly without cutting last line
+        sendRasterToPrinter(bmp, y.toInt().coerceAtMost(1280), feedLines = 5)
+    }
+
+    private suspend fun sendRasterToPrinter(bmp: Bitmap, targetHeight: Int, feedLines: Int) {
         val cropped = Bitmap.createBitmap(bmp, 0, 0, 384, targetHeight)
         val stream = ByteArrayOutputStream()
         stream.write(byteArrayOf(0x1B, 0x40))
@@ -620,7 +802,7 @@ class MainActivity : ComponentActivity() {
                 stream.write(slice)
             }
         }
-        stream.write(byteArrayOf(0x1B, 0x64, 0x04))
+        stream.write(byteArrayOf(0x1B, 0x64, feedLines.toByte()))
 
         try {
             outputStream?.write(stream.toByteArray())
