@@ -398,14 +398,14 @@ class MainActivity : ComponentActivity() {
             return@withContext
         }
 
-        // Height increased to 2400 to achieve original slip full long vertical spacing
-        val bmp = Bitmap.createBitmap(384, 2400, Bitmap.Config.ARGB_8888)
+        // Calibrated Height 2050 (Exact Asli Slip Length ~25.5 cm)
+        val bmp = Bitmap.createBitmap(384, 2050, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         canvas.drawColor(Color.WHITE)
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.BLACK
-            textSize = 22f
+            textSize = 21f
         }
 
         val nastaleeq = try {
@@ -414,37 +414,52 @@ class MainActivity : ComponentActivity() {
             Typeface.DEFAULT_BOLD
         }
 
-        var y = 50f
+        var y = 40f
 
-        // 1. Draw Uploaded Logo from res/drawable/logo.png
+        // Draw and Bold the Uploaded Logo
         val logoResId = resources.getIdentifier("logo", "drawable", packageName)
         if (logoResId != 0) {
             val originalBmp = BitmapFactory.decodeResource(resources, logoResId)
             if (originalBmp != null) {
                 val size = 120
                 val scaled = Bitmap.createScaledBitmap(originalBmp, size, size, true)
-                canvas.drawBitmap(scaled, (384f - size) / 2f, y, null)
-                y += size + 45f
+
+                // High Contrast / Bolding Filter for Dark Sharp Printing
+                val boldBmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+                for (px in 0 until size) {
+                    for (py in 0 until size) {
+                        val pixel = scaled.getPixel(px, py)
+                        val alpha = Color.alpha(pixel)
+                        val lum = (0.299 * Color.red(pixel) + 0.587 * Color.green(pixel) + 0.114 * Color.blue(pixel)).toInt()
+                        if (alpha > 40 && lum < 220) {
+                            boldBmp.setPixel(px, py, Color.BLACK)
+                        } else {
+                            boldBmp.setPixel(px, py, Color.WHITE)
+                        }
+                    }
+                }
+                canvas.drawBitmap(boldBmp, (384f - size) / 2f, y, null)
+                y += size + 36f
             }
         } else {
-            y += 50f
+            y += 40f
         }
 
         // Header Title
         paint.typeface = nastaleeq
-        paint.textSize = 23f
+        paint.textSize = 22f
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("پنجاب کیٹل مارکیٹ مینجمنٹ اینڈ ڈویلپمنٹ کمپنی", 192f, y, paint)
-        y += 80f
+        y += 70f
 
-        paint.textSize = 20f
+        paint.textSize = 19.5f
         fun drawRow(label: String, value: String) {
             paint.typeface = nastaleeq
             paint.textAlign = Paint.Align.RIGHT
             canvas.drawText(label, 370f, y, paint)
             paint.textAlign = Paint.Align.LEFT
             canvas.drawText(value, 14f, y, paint)
-            y += 62f
+            y += 53f
         }
 
         drawRow("ڈویژن", "فیصل آباد")
@@ -452,24 +467,24 @@ class MainActivity : ComponentActivity() {
         drawRow("نام ٹھیکیدار", "محمد اسماعیل")
         drawRow("نام آپریٹر", operatorName)
 
-        y += 30f
+        y += 24f
         paint.typeface = nastaleeq
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("رسید نمبر", 192f, y, paint)
-        y += 48f
+        y += 40f
         paint.typeface = Typeface.MONOSPACE
-        paint.textSize = 21f
+        paint.textSize = 20.5f
         canvas.drawText(rNo, 192f, y, paint)
-        y += 62f
+        y += 52f
 
         paint.typeface = nastaleeq
-        paint.textSize = 20f
+        paint.textSize = 19.5f
         canvas.drawText("تاریخ و وقت", 192f, y, paint)
-        y += 48f
+        y += 40f
         paint.typeface = Typeface.MONOSPACE
-        paint.textSize = 20f
+        paint.textSize = 19.5f
         canvas.drawText(dateTimeStr, 192f, y, paint)
-        y += 55f
+        y += 48f
 
         fun drawDashedLine(currentY: Float) {
             val dashPaint = Paint().apply {
@@ -482,12 +497,12 @@ class MainActivity : ComponentActivity() {
         }
 
         drawDashedLine(y)
-        y += 55f
+        y += 48f
 
         paint.typeface = nastaleeq
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("فیس رسید", 192f, y, paint)
-        y += 55f
+        y += 48f
 
         paint.textAlign = Paint.Align.RIGHT
         canvas.drawText("فیس کی قسم", 370f, y, paint)
@@ -496,10 +511,10 @@ class MainActivity : ComponentActivity() {
         canvas.drawText("یونٹ", 160f, y, paint)
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("قیمت", 14f, y, paint)
-        y += 40f
+        y += 35f
 
         drawDashedLine(y)
-        y += 55f
+        y += 48f
 
         paint.textAlign = Paint.Align.RIGHT
         canvas.drawText(catName, 370f, y, paint)
@@ -509,10 +524,10 @@ class MainActivity : ComponentActivity() {
         canvas.drawText("$unitRate", 160f, y, paint)
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("$basePrice", 14f, y, paint)
-        y += 58f
+        y += 50f
 
         drawDashedLine(y)
-        y += 55f
+        y += 48f
 
         paint.typeface = nastaleeq
         paint.textAlign = Paint.Align.RIGHT
@@ -520,49 +535,49 @@ class MainActivity : ComponentActivity() {
         paint.typeface = Typeface.MONOSPACE
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("$pst", 14f, y, paint)
-        y += 65f
+        y += 55f
 
         paint.typeface = nastaleeq
-        paint.textSize = 24f
+        paint.textSize = 23.5f
         paint.textAlign = Paint.Align.RIGHT
         canvas.drawText("کل", 370f, y, paint)
         paint.typeface = Typeface.MONOSPACE
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("$total", 14f, y, paint)
-        y += 70f
-
-        drawDashedLine(y)
-        y += 65f
-
-        paint.typeface = nastaleeq
-        paint.textSize = 20f
-        paint.textAlign = Paint.Align.CENTER
-        canvas.drawText("جاری کردہ توسط", 192f, y, paint)
-        y += 52f
-        paint.typeface = Typeface.DEFAULT_BOLD
-        paint.textSize = 21f
-        canvas.drawText(operatorName, 192f, y, paint)
-        y += 70f
-
-        paint.typeface = nastaleeq
-        paint.textSize = 25f
-        canvas.drawText("اداشدہ", 192f, y, paint)
-        y += 75f
-
-        paint.textSize = 18f
-        canvas.drawText("1233 : ہیلپ لائن", 192f, y, paint)
-        y += 50f
-        canvas.drawText("+92 323 1233000 : واٹس ایپ", 192f, y, paint)
-        y += 50f
-        canvas.drawText("31.215677, 72.355752 : GPS مقام", 192f, y, paint)
         y += 60f
 
-        canvas.drawText("شکریہ", 192f, y, paint)
+        drawDashedLine(y)
         y += 55f
+
+        paint.typeface = nastaleeq
+        paint.textSize = 19.5f
+        paint.textAlign = Paint.Align.CENTER
+        canvas.drawText("جاری کردہ توسط", 192f, y, paint)
+        y += 45f
+        paint.typeface = Typeface.DEFAULT_BOLD
+        paint.textSize = 20.5f
+        canvas.drawText(operatorName, 192f, y, paint)
+        y += 60f
+
+        paint.typeface = nastaleeq
+        paint.textSize = 24.5f
+        canvas.drawText("اداشدہ", 192f, y, paint)
+        y += 65f
+
+        paint.textSize = 17.5f
+        canvas.drawText("1233 : ہیلپ لائن", 192f, y, paint)
+        y += 43f
+        canvas.drawText("+92 323 1233000 : واٹس ایپ", 192f, y, paint)
+        y += 43f
+        canvas.drawText("31.215677, 72.355752 : GPS مقام", 192f, y, paint)
+        y += 50f
+
+        canvas.drawText("شکریہ", 192f, y, paint)
+        y += 46f
 
         paint.typeface = Typeface.MONOSPACE
         canvas.drawText("Powered by PCMMDC", 192f, y, paint)
-        y += 85f
+        y += 60f
 
         // ESC/POS Raster Print
         val cropped = Bitmap.createBitmap(bmp, 0, 0, 384, y.toInt())
@@ -587,7 +602,7 @@ class MainActivity : ComponentActivity() {
                     if (px < 384) {
                         val pixel = cropped.getPixel(px, row)
                         val lum = (0.299 * Color.red(pixel) + 0.587 * Color.green(pixel) + 0.114 * Color.blue(pixel)).toInt()
-                        if (lum < 140) {
+                        if (lum < 165) {
                             slice = slice or (1 shl (7 - b))
                         }
                     }
@@ -595,7 +610,7 @@ class MainActivity : ComponentActivity() {
                 stream.write(slice)
             }
         }
-        stream.write(byteArrayOf(0x1B, 0x64, 0x05))
+        stream.write(byteArrayOf(0x1B, 0x64, 0x04))
 
         try {
             outputStream?.write(stream.toByteArray())
