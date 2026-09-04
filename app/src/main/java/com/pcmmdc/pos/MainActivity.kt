@@ -14,7 +14,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -23,7 +22,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -163,6 +161,7 @@ class MainActivity : ComponentActivity() {
         var selectedCat by remember { mutableStateOf(categories[0]) }
         var quantity by remember { mutableIntStateOf(1) }
         var receiptNo by remember { mutableStateOf("260829170356296") }
+        var operatorName by remember { mutableStateOf("M Yasir Hameed") }
 
         val defaultDateTime = SimpleDateFormat("dd/MM/yyyy hh:mm:ss a", Locale.US).format(Date())
         var manualDateTime by remember { mutableStateOf(defaultDateTime) }
@@ -268,6 +267,13 @@ class MainActivity : ComponentActivity() {
                 }
 
                 OutlinedTextField(
+                    value = operatorName,
+                    onValueChange = { operatorName = it },
+                    label = { Text("نام آپریٹر / جاری کردہ توسط (Operator Name)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
                     value = receiptNo,
                     onValueChange = { receiptNo = it },
                     label = { Text("رسید نمبر (Receipt No)") },
@@ -284,7 +290,7 @@ class MainActivity : ComponentActivity() {
                 Button(
                     onClick = {
                         lifecycleScope.launch {
-                            printSlip(selectedCat.nameUrdu, quantity, selectedCat.rate, basePrice, pstTax, grandTotal, receiptNo, manualDateTime)
+                            printSlip(selectedCat.nameUrdu, quantity, selectedCat.rate, basePrice, pstTax, grandTotal, receiptNo, manualDateTime, operatorName)
                             salesList.add(
                                 SaleRecord(receiptNo, selectedCat.nameUrdu, quantity, basePrice, pstTax, grandTotal, manualDateTime)
                             )
@@ -383,7 +389,7 @@ class MainActivity : ComponentActivity() {
 
     private suspend fun printSlip(
         catName: String, qty: Int, unitRate: Long, basePrice: Long,
-        pst: Long, total: Long, rNo: String, dateTimeStr: String
+        pst: Long, total: Long, rNo: String, dateTimeStr: String, operatorName: String
     ) = withContext(Dispatchers.Default) {
         if (outputStream == null) {
             withContext(Dispatchers.Main) {
@@ -392,14 +398,14 @@ class MainActivity : ComponentActivity() {
             return@withContext
         }
 
-        // True long receipt height (1800)
-        val bmp = Bitmap.createBitmap(384, 1800, Bitmap.Config.ARGB_8888)
+        // Height increased to 2400 to achieve original slip full long vertical spacing
+        val bmp = Bitmap.createBitmap(384, 2400, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         canvas.drawColor(Color.WHITE)
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.BLACK
-            textSize = 21f
+            textSize = 22f
         }
 
         val nastaleeq = try {
@@ -408,62 +414,62 @@ class MainActivity : ComponentActivity() {
             Typeface.DEFAULT_BOLD
         }
 
-        var y = 40f
+        var y = 50f
 
-        // Draw Uploaded Logo from res/drawable/logo.png
+        // 1. Draw Uploaded Logo from res/drawable/logo.png
         val logoResId = resources.getIdentifier("logo", "drawable", packageName)
         if (logoResId != 0) {
             val originalBmp = BitmapFactory.decodeResource(resources, logoResId)
             if (originalBmp != null) {
-                val size = 110
+                val size = 120
                 val scaled = Bitmap.createScaledBitmap(originalBmp, size, size, true)
                 canvas.drawBitmap(scaled, (384f - size) / 2f, y, null)
-                y += size + 35f
+                y += size + 45f
             }
         } else {
-            y += 40f
+            y += 50f
         }
 
         // Header Title
         paint.typeface = nastaleeq
-        paint.textSize = 22f
+        paint.textSize = 23f
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("پنجاب کیٹل مارکیٹ مینجمنٹ اینڈ ڈویلپمنٹ کمپنی", 192f, y, paint)
-        y += 65f
+        y += 80f
 
-        paint.textSize = 19f
+        paint.textSize = 20f
         fun drawRow(label: String, value: String) {
             paint.typeface = nastaleeq
             paint.textAlign = Paint.Align.RIGHT
             canvas.drawText(label, 370f, y, paint)
             paint.textAlign = Paint.Align.LEFT
             canvas.drawText(value, 14f, y, paint)
-            y += 50f
+            y += 62f
         }
 
         drawRow("ڈویژن", "فیصل آباد")
         drawRow("مارکیٹ", "ماڈل مویشی منڈی جھنگ سٹی")
         drawRow("نام ٹھیکیدار", "محمد اسماعیل")
-        drawRow("نام آپریٹر", "M Yasir Hameed")
+        drawRow("نام آپریٹر", operatorName)
 
-        y += 20f
+        y += 30f
         paint.typeface = nastaleeq
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("رسید نمبر", 192f, y, paint)
-        y += 38f
-        paint.typeface = Typeface.MONOSPACE
-        paint.textSize = 20f
-        canvas.drawText(rNo, 192f, y, paint)
         y += 48f
+        paint.typeface = Typeface.MONOSPACE
+        paint.textSize = 21f
+        canvas.drawText(rNo, 192f, y, paint)
+        y += 62f
 
         paint.typeface = nastaleeq
-        paint.textSize = 19f
+        paint.textSize = 20f
         canvas.drawText("تاریخ و وقت", 192f, y, paint)
-        y += 38f
+        y += 48f
         paint.typeface = Typeface.MONOSPACE
-        paint.textSize = 19f
+        paint.textSize = 20f
         canvas.drawText(dateTimeStr, 192f, y, paint)
-        y += 45f
+        y += 55f
 
         fun drawDashedLine(currentY: Float) {
             val dashPaint = Paint().apply {
@@ -476,12 +482,12 @@ class MainActivity : ComponentActivity() {
         }
 
         drawDashedLine(y)
-        y += 45f
+        y += 55f
 
         paint.typeface = nastaleeq
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("فیس رسید", 192f, y, paint)
-        y += 45f
+        y += 55f
 
         paint.textAlign = Paint.Align.RIGHT
         canvas.drawText("فیس کی قسم", 370f, y, paint)
@@ -490,10 +496,10 @@ class MainActivity : ComponentActivity() {
         canvas.drawText("یونٹ", 160f, y, paint)
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("قیمت", 14f, y, paint)
-        y += 30f
+        y += 40f
 
         drawDashedLine(y)
-        y += 45f
+        y += 55f
 
         paint.textAlign = Paint.Align.RIGHT
         canvas.drawText(catName, 370f, y, paint)
@@ -503,10 +509,10 @@ class MainActivity : ComponentActivity() {
         canvas.drawText("$unitRate", 160f, y, paint)
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("$basePrice", 14f, y, paint)
-        y += 45f
+        y += 58f
 
         drawDashedLine(y)
-        y += 45f
+        y += 55f
 
         paint.typeface = nastaleeq
         paint.textAlign = Paint.Align.RIGHT
@@ -514,49 +520,49 @@ class MainActivity : ComponentActivity() {
         paint.typeface = Typeface.MONOSPACE
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("$pst", 14f, y, paint)
-        y += 50f
+        y += 65f
 
         paint.typeface = nastaleeq
-        paint.textSize = 23f
+        paint.textSize = 24f
         paint.textAlign = Paint.Align.RIGHT
         canvas.drawText("کل", 370f, y, paint)
         paint.typeface = Typeface.MONOSPACE
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("$total", 14f, y, paint)
-        y += 55f
+        y += 70f
 
         drawDashedLine(y)
-        y += 50f
+        y += 65f
 
         paint.typeface = nastaleeq
-        paint.textSize = 19f
+        paint.textSize = 20f
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("جاری کردہ توسط", 192f, y, paint)
-        y += 42f
+        y += 52f
         paint.typeface = Typeface.DEFAULT_BOLD
-        paint.textSize = 20f
-        canvas.drawText("M Yasir Hameed", 192f, y, paint)
-        y += 55f
+        paint.textSize = 21f
+        canvas.drawText(operatorName, 192f, y, paint)
+        y += 70f
 
         paint.typeface = nastaleeq
-        paint.textSize = 24f
+        paint.textSize = 25f
         canvas.drawText("اداشدہ", 192f, y, paint)
+        y += 75f
+
+        paint.textSize = 18f
+        canvas.drawText("1233 : ہیلپ لائن", 192f, y, paint)
+        y += 50f
+        canvas.drawText("+92 323 1233000 : واٹس ایپ", 192f, y, paint)
+        y += 50f
+        canvas.drawText("31.215677, 72.355752 : GPS مقام", 192f, y, paint)
         y += 60f
 
-        paint.textSize = 17f
-        canvas.drawText("1233 : ہیلپ لائن", 192f, y, paint)
-        y += 40f
-        canvas.drawText("+92 323 1233000 : واٹس ایپ", 192f, y, paint)
-        y += 40f
-        canvas.drawText("31.215677, 72.355752 : GPS مقام", 192f, y, paint)
-        y += 48f
-
         canvas.drawText("شکریہ", 192f, y, paint)
-        y += 45f
+        y += 55f
 
         paint.typeface = Typeface.MONOSPACE
         canvas.drawText("Powered by PCMMDC", 192f, y, paint)
-        y += 65f
+        y += 85f
 
         // ESC/POS Raster Print
         val cropped = Bitmap.createBitmap(bmp, 0, 0, 384, y.toInt())
@@ -589,7 +595,7 @@ class MainActivity : ComponentActivity() {
                 stream.write(slice)
             }
         }
-        stream.write(byteArrayOf(0x1B, 0x64, 0x04))
+        stream.write(byteArrayOf(0x1B, 0x64, 0x05))
 
         try {
             outputStream?.write(stream.toByteArray())
