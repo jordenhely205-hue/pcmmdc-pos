@@ -23,9 +23,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Assessment
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Print
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -195,8 +194,8 @@ class MainActivity : ComponentActivity() {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = { showReportDialog = true }) {
-                            Icon(Icons.Default.Assessment, contentDescription = "Record")
+                        OutlinedButton(onClick = { showReportDialog = true }) {
+                            Text("روزانہ ریکارڈ")
                         }
                         Text("PCMMDC POS", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                         Button(onClick = {
@@ -294,13 +293,12 @@ class MainActivity : ComponentActivity() {
                     },
                     modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) {
-                    Icon(Icons.Default.Print, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("پرچی پرنٹ کریں", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                    Text("🖨️  پرچی پرنٹ کریں", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
 
+        // Daily Report Dialog
         if (showReportDialog) {
             val totalSlips = salesList.size
             val totalAnimals = salesList.sumOf { it.qty }
@@ -323,6 +321,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        // Device Picker Dialog
         if (showDeviceDialog) {
             Dialog(onDismissRequest = { showDeviceDialog = false }) {
                 Card(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
@@ -393,7 +392,7 @@ class MainActivity : ComponentActivity() {
             return@withContext
         }
 
-        // Height set to 1800 for true long slip spacing
+        // True long receipt height (1800)
         val bmp = Bitmap.createBitmap(384, 1800, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         canvas.drawColor(Color.WHITE)
@@ -411,7 +410,7 @@ class MainActivity : ComponentActivity() {
 
         var y = 40f
 
-        // Draw Uploaded Logo (logo.png from res/drawable)
+        // Draw Uploaded Logo from res/drawable/logo.png
         val logoResId = resources.getIdentifier("logo", "drawable", packageName)
         if (logoResId != 0) {
             val originalBmp = BitmapFactory.decodeResource(resources, logoResId)
