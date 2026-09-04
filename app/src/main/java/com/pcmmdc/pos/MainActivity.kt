@@ -285,22 +285,36 @@ class MainActivity : ComponentActivity() {
             Typeface.DEFAULT_BOLD
         }
 
-        var y = 30f
+        var y = 25f
 
-        val logoPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        val emblemPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.BLACK
             style = Paint.Style.STROKE
-            strokeWidth = 3f
+            strokeWidth = 2.5f
         }
-        canvas.drawCircle(192f, y + 25f, 25f, logoPaint)
-        canvas.drawCircle(192f, y + 25f, 20f, logoPaint)
-        val starPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+
+        // Outer Double Rings
+        canvas.drawCircle(192f, y + 40f, 38f, emblemPaint)
+        canvas.drawCircle(192f, y + 40f, 34f, emblemPaint)
+
+        // Inner Fill Paint
+        val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.BLACK
-            textSize = 18f
+            style = Paint.Style.FILL
             textAlign = Paint.Align.CENTER
         }
-        canvas.drawText("★", 192f, y + 31f, starPaint)
-        y += 65f
+
+        // Base River Waves
+        canvas.drawLine(168f, y + 52f, 216f, y + 52f, emblemPaint)
+        canvas.drawLine(173f, y + 57f, 211f, y + 57f, emblemPaint)
+
+        // Star & Moon
+        fillPaint.textSize = 15f
+        canvas.drawText("★", 192f, y + 30f, fillPaint)
+        fillPaint.textSize = 24f
+        canvas.drawText("☽", 192f, y + 46f, fillPaint)
+
+        y += 90f
 
         paint.typeface = nastaleeq
         paint.textSize = 21f
