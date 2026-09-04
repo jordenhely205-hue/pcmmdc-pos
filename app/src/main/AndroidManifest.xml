@@ -14,7 +14,7 @@
         android:label="PCMMDC POS"
         android:supportsRtl="true"
         android:largeHeap="true"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity
             android:name=".MainActivity"
             android:exported="true"
