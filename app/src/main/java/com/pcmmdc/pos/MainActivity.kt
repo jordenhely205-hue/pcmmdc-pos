@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.*
+import android.graphics.Paint.Align.*
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
@@ -453,16 +454,16 @@ class MainActivity : ComponentActivity() {
 
         paint.typeface = nastaleeq
         paint.textSize = 22.5f
-        paint.textAlign = Paint.Align.CENTER
+        paint.textAlign = CENTER
         canvas.drawText("پنجاب کیٹل مارکیٹ مینجمنٹ اینڈ ڈویلپمنٹ کمپنی", 192f, y, paint)
         y += 75f
 
         paint.textSize = 20f
         fun drawRow(label: String, value: String) {
             paint.typeface = nastaleeq
-            paint.textAlign = Paint.Align.RIGHT
+            paint.textAlign = RIGHT
             canvas.drawText(label, 370f, y, paint)
-            paint.textAlign = Paint.LEFT
+            paint.textAlign = LEFT
             canvas.drawText(value, 14f, y, paint)
             y += 57f
         }
@@ -474,7 +475,7 @@ class MainActivity : ComponentActivity() {
 
         y += 26f
         paint.typeface = nastaleeq
-        paint.textAlign = Paint.Align.CENTER
+        paint.textAlign = CENTER
         canvas.drawText("رسید نمبر", 192f, y, paint)
         y += 43f
         paint.typeface = Typeface.MONOSPACE
@@ -505,29 +506,29 @@ class MainActivity : ComponentActivity() {
         y += 51f
 
         paint.typeface = nastaleeq
-        paint.textAlign = Paint.Align.CENTER
+        paint.textAlign = CENTER
         canvas.drawText("فیس رسید", 192f, y, paint)
         y += 51f
 
-        paint.textAlign = Paint.RIGHT
+        paint.textAlign = RIGHT
         canvas.drawText("فیس کی قسم", 370f, y, paint)
-        paint.textAlign = Paint.CENTER
+        paint.textAlign = CENTER
         canvas.drawText("تعداد", 245f, y, paint)
         canvas.drawText("یونٹ", 160f, y, paint)
-        paint.textAlign = Paint.LEFT
+        paint.textAlign = LEFT
         canvas.drawText("قیمت", 14f, y, paint)
         y += 37f
 
         drawDashedLine(y)
         y += 51f
 
-        paint.textAlign = Paint.RIGHT
+        paint.textAlign = RIGHT
         canvas.drawText(catName, 370f, y, paint)
         paint.typeface = Typeface.MONOSPACE
-        paint.textAlign = Paint.CENTER
+        paint.textAlign = CENTER
         canvas.drawText("$qty", 245f, y, paint)
         canvas.drawText("$unitRate", 160f, y, paint)
-        paint.textAlign = Paint.LEFT
+        paint.textAlign = LEFT
         canvas.drawText("$basePrice", 14f, y, paint)
         y += 53f
 
@@ -535,19 +536,19 @@ class MainActivity : ComponentActivity() {
         y += 51f
 
         paint.typeface = nastaleeq
-        paint.textAlign = Paint.Align.RIGHT
+        paint.textAlign = RIGHT
         canvas.drawText("PST(16%)", 370f, y, paint)
         paint.typeface = Typeface.MONOSPACE
-        paint.textAlign = Paint.LEFT
+        paint.textAlign = LEFT
         canvas.drawText("$pst", 14f, y, paint)
         y += 59f
 
         paint.typeface = nastaleeq
         paint.textSize = 24f
-        paint.textAlign = Paint.Align.RIGHT
+        paint.textAlign = RIGHT
         canvas.drawText("کل", 370f, y, paint)
         paint.typeface = Typeface.MONOSPACE
-        paint.textAlign = Paint.LEFT
+        paint.textAlign = LEFT
         canvas.drawText("$total", 14f, y, paint)
         y += 64f
 
@@ -556,7 +557,7 @@ class MainActivity : ComponentActivity() {
 
         paint.typeface = nastaleeq
         paint.textSize = 20f
-        paint.textAlign = Paint.Align.CENTER
+        paint.textAlign = CENTER
         canvas.drawText("جاری کردہ توسط", 192f, y, paint)
         y += 47f
         paint.typeface = Typeface.DEFAULT_BOLD
@@ -599,7 +600,6 @@ class MainActivity : ComponentActivity() {
             return@withContext
         }
 
-        // Exact 16cm height maintained
         val bmp = Bitmap.createBitmap(384, 1280, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         canvas.drawColor(Color.WHITE)
@@ -615,7 +615,6 @@ class MainActivity : ComponentActivity() {
             Typeface.DEFAULT_BOLD
         }
 
-        // Natural, gentle top padding (not zero, not too far)
         var y = 12f
 
         val logoResId = resources.getIdentifier("logo", "drawable", packageName)
@@ -633,16 +632,16 @@ class MainActivity : ComponentActivity() {
 
         paint.typeface = nastaleeq
         paint.textSize = 21f
-        paint.textAlign = Paint.Align.CENTER
+        paint.textAlign = CENTER
         canvas.drawText("پنجاب کیٹل مارکیٹ مینجمنٹ اینڈ ڈویلپمنٹ کمپنی", 192f, y, paint)
         y += 40f
 
         paint.textSize = 19f
         fun drawRow(label: String, value: String) {
             paint.typeface = nastaleeq
-            paint.textAlign = Paint.Align.RIGHT
+            paint.textAlign = RIGHT
             canvas.drawText(label, 370f, y, paint)
-            paint.textAlign = Paint.LEFT
+            paint.textAlign = LEFT
             canvas.drawText(value, 14f, y, paint)
             y += 31.5f
         }
@@ -654,7 +653,7 @@ class MainActivity : ComponentActivity() {
 
         y += 12f
         paint.typeface = nastaleeq
-        paint.textAlign = Paint.Align.CENTER
+        paint.textAlign = CENTER
         canvas.drawText("رسید نمبر", 192f, y, paint)
         y += 25f
         paint.typeface = Typeface.MONOSPACE
@@ -685,29 +684,29 @@ class MainActivity : ComponentActivity() {
         y += 28f
 
         paint.typeface = nastaleeq
-        paint.textAlign = Paint.Align.CENTER
+        paint.textAlign = CENTER
         canvas.drawText("فیس رسید", 192f, y, paint)
         y += 28f
 
-        paint.textAlign = Paint.RIGHT
+        paint.textAlign = RIGHT
         canvas.drawText("فیس کی قسم", 370f, y, paint)
-        paint.textAlign = Paint.CENTER
+        paint.textAlign = CENTER
         canvas.drawText("تعداد", 245f, y, paint)
         canvas.drawText("یونٹ", 160f, y, paint)
-        paint.textAlign = Paint.LEFT
+        paint.textAlign = LEFT
         canvas.drawText("قیمت", 14f, y, paint)
         y += 23f
 
         drawDashedLine(y)
         y += 28f
 
-        paint.textAlign = Paint.RIGHT
+        paint.textAlign = RIGHT
         canvas.drawText(catName, 370f, y, paint)
         paint.typeface = Typeface.MONOSPACE
-        paint.textAlign = Paint.CENTER
+        paint.textAlign = CENTER
         canvas.drawText("$qty", 245f, y, paint)
         canvas.drawText("$unitRate", 160f, y, paint)
-        paint.textAlign = Paint.LEFT
+        paint.textAlign = LEFT
         canvas.drawText("$basePrice", 14f, y, paint)
         y += 29.5f
 
@@ -715,19 +714,19 @@ class MainActivity : ComponentActivity() {
         y += 28f
 
         paint.typeface = nastaleeq
-        paint.textAlign = Paint.Align.RIGHT
+        paint.textAlign = RIGHT
         canvas.drawText("PST(16%)", 370f, y, paint)
         paint.typeface = Typeface.MONOSPACE
-        paint.textAlign = Paint.LEFT
+        paint.textAlign = LEFT
         canvas.drawText("$pst", 14f, y, paint)
         y += 32f
 
         paint.typeface = nastaleeq
         paint.textSize = 22f
-        paint.textAlign = Paint.Align.RIGHT
+        paint.textAlign = RIGHT
         canvas.drawText("کل", 370f, y, paint)
         paint.typeface = Typeface.MONOSPACE
-        paint.textAlign = Paint.LEFT
+        paint.textAlign = LEFT
         canvas.drawText("$total", 14f, y, paint)
         y += 35f
 
@@ -736,7 +735,7 @@ class MainActivity : ComponentActivity() {
 
         paint.typeface = nastaleeq
         paint.textSize = 19f
-        paint.textAlign = Paint.Align.CENTER
+        paint.textAlign = CENTER
         canvas.drawText("جاری کردہ توسط", 192f, y, paint)
         y += 26f
         paint.typeface = Typeface.DEFAULT_BOLD
@@ -764,7 +763,6 @@ class MainActivity : ComponentActivity() {
         canvas.drawText("Powered by PCMMDC", 192f, y, paint)
         y += 40f
 
-        // Exact feed to clear paper cutter cleanly without cutting last line
         sendRasterToPrinter(bmp, y.toInt().coerceAtMost(1280), feedLines = 5)
     }
 
