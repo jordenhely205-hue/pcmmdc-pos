@@ -2,7 +2,6 @@ package com.pcmmdc.pos
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.content.Context
@@ -15,17 +14,26 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Assessment
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Print
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -41,9 +49,20 @@ import java.util.*
 
 data class AnimalCategory(val nameUrdu: String, val rate: Long)
 
+data class SaleRecord(
+    val receiptNo: String,
+    val category: String,
+    val qty: Int,
+    val base: Long,
+    val pst: Long,
+    val total: Long,
+    val dateTime: String
+)
+
 class MainActivity : ComponentActivity() {
 
     private var outputStream: OutputStream? = null
+    private val salesList = mutableStateListOf<SaleRecord>()
 
     private val categories = listOf(
         AnimalCategory("بڑا جانور", 1500L),
@@ -60,7 +79,81 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme {
-                POSScreen()
+                MainAppFlow()
+            }
+        }
+    }
+
+    @Composable
+    fun MainAppFlow() {
+        var isLoggedIn by remember { mutableStateOf(false) }
+
+        if (!isLoggedIn) {
+            LoginScreen(onLoginSuccess = { isLoggedIn = true })
+        } else {
+            POSScreen()
+        }
+    }
+
+    @Composable
+    fun LoginScreen(onLoginSuccess: () -> Unit) {
+        var username by remember { mutableStateOf("yasir") }
+        var password by remember { mutableStateOf("1234") }
+        var error by remember { mutableStateOf(false) }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(48.dp))
+                    Text("PCMMDC لاگ ان", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+
+                    OutlinedTextField(
+                        value = username,
+                        onValueChange = { username = it },
+                        label = { Text("آپریٹر یوزر نیم") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text("پاس ورڈ") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    if (error) {
+                        Text("غلط صارف یا پاس ورڈ", color = ComposeColor.Red, fontSize = 14.sp)
+                    }
+
+                    Button(
+                        onClick = {
+                            if (username.isNotBlank() && password == "1234") {
+                                onLoginSuccess()
+                            } else {
+                                error = true
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(50.dp)
+                    ) {
+                        Text("لاگ ان کریں", fontSize = 17.sp)
+                    }
+                }
             }
         }
     }
@@ -70,13 +163,14 @@ class MainActivity : ComponentActivity() {
     fun POSScreen() {
         var selectedCat by remember { mutableStateOf(categories[0]) }
         var quantity by remember { mutableIntStateOf(1) }
-        var receiptNo by remember { mutableStateOf("260829170356295") }
-        
+        var receiptNo by remember { mutableStateOf("260829170356296") }
+
         val defaultDateTime = SimpleDateFormat("dd/MM/yyyy hh:mm:ss a", Locale.US).format(Date())
         var manualDateTime by remember { mutableStateOf(defaultDateTime) }
 
         var connectedDeviceName by remember { mutableStateOf<String?>(null) }
         var showDeviceDialog by remember { mutableStateOf(false) }
+        var showReportDialog by remember { mutableStateOf(false) }
         var pairedDevices by remember { mutableStateOf<List<BluetoothDevice>>(emptyList()) }
 
         val basePrice = selectedCat.rate * quantity
@@ -86,8 +180,7 @@ class MainActivity : ComponentActivity() {
         val permissionLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestMultiplePermissions()
         ) { perms ->
-            val granted = perms.values.all { it }
-            if (granted) {
+            if (perms.values.all { it }) {
                 openDevicePicker { devs -> pairedDevices = devs; showDeviceDialog = true }
             } else {
                 Toast.makeText(this@MainActivity, "بلوٹوتھ پرمیشن ضروری ہے!", Toast.LENGTH_SHORT).show()
@@ -98,10 +191,13 @@ class MainActivity : ComponentActivity() {
             topBar = {
                 Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        IconButton(onClick = { showReportDialog = true }) {
+                            Icon(Icons.Default.Assessment, contentDescription = "Record")
+                        }
                         Text("PCMMDC POS", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                         Button(onClick = {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -126,7 +222,7 @@ class MainActivity : ComponentActivity() {
                     .padding(padding)
                     .padding(14.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text("جانور کی قسم منتخب کریں:", fontWeight = FontWeight.Bold)
                 LazyVerticalGrid(
@@ -190,12 +286,39 @@ class MainActivity : ComponentActivity() {
                     onClick = {
                         lifecycleScope.launch {
                             printSlip(selectedCat.nameUrdu, quantity, selectedCat.rate, basePrice, pstTax, grandTotal, receiptNo, manualDateTime)
+                            salesList.add(
+                                SaleRecord(receiptNo, selectedCat.nameUrdu, quantity, basePrice, pstTax, grandTotal, manualDateTime)
+                            )
                             receiptNo = (receiptNo.toLongOrNull()?.plus(1) ?: receiptNo).toString()
                         }
                     },
                     modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) {
-                    Text("پرچی پرنٹ کریں (Print Receipt)", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                    Icon(Icons.Default.Print, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("پرچی پرنٹ کریں", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        if (showReportDialog) {
+            val totalSlips = salesList.size
+            val totalAnimals = salesList.sumOf { it.qty }
+            val totalAmount = salesList.sumOf { it.total }
+
+            Dialog(onDismissRequest = { showReportDialog = false }) {
+                Card(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text("روزانہ سیل ریکارڈ (Daily Summary)", fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                        Divider()
+                        Text("کل پرچیاں کٹیں: $totalSlips")
+                        Text("کل جانور: $totalAnimals")
+                        Text("کل وصول شدہ رقم: Rs. $totalAmount", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Button(onClick = { showReportDialog = false }, modifier = Modifier.fillMaxWidth()) {
+                            Text("بند کریں")
+                        }
+                    }
                 }
             }
         }
@@ -204,10 +327,10 @@ class MainActivity : ComponentActivity() {
             Dialog(onDismissRequest = { showDeviceDialog = false }) {
                 Card(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("دستیاب بلوٹوتھ پرنٹر منتخب کریں", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text("بلوٹوتھ پرنٹر منتخب کریں", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         Spacer(modifier = Modifier.height(10.dp))
                         if (pairedDevices.isEmpty()) {
-                            Text("کوئی پیئرڈ ڈیوائس نہیں ملی۔ فون کی بلوٹوتھ سیٹنگز میں جا کر پرنٹر کو پہلے جوڑیں۔")
+                            Text("کوئی پیئرڈ ڈیوائس نہیں ملی۔ فون کی بلوٹوتھ میں جا کر پہلے پرنٹر پیئر کریں۔")
                         } else {
                             pairedDevices.forEach { dev ->
                                 TextButton(
@@ -234,7 +357,7 @@ class MainActivity : ComponentActivity() {
             val bonded = bm.adapter?.bondedDevices?.toList() ?: emptyList()
             onDevices(bonded)
         } catch (e: Exception) {
-            Toast.makeText(this, "بلوٹوتھ ایرر: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "ایرر: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -249,7 +372,7 @@ class MainActivity : ComponentActivity() {
                 outputStream = socket.outputStream
                 withContext(Dispatchers.Main) {
                     onConnected(device.name ?: "Connected")
-                    Toast.makeText(this@MainActivity, "پرنٹر کامیابی سے کنیکٹ ہو گیا!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "پرنٹر کنیکٹ ہو گیا!", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
@@ -270,13 +393,14 @@ class MainActivity : ComponentActivity() {
             return@withContext
         }
 
-        val bmp = Bitmap.createBitmap(384, 1150, Bitmap.Config.ARGB_8888)
+        // Height set to 1800 for true long slip spacing
+        val bmp = Bitmap.createBitmap(384, 1800, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         canvas.drawColor(Color.WHITE)
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.BLACK
-            textSize = 20f
+            textSize = 21f
         }
 
         val nastaleeq = try {
@@ -285,51 +409,37 @@ class MainActivity : ComponentActivity() {
             Typeface.DEFAULT_BOLD
         }
 
-        var y = 25f
+        var y = 40f
 
-        val emblemPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.BLACK
-            style = Paint.Style.STROKE
-            strokeWidth = 2.5f
+        // Draw Uploaded Logo (logo.png from res/drawable)
+        val logoResId = resources.getIdentifier("logo", "drawable", packageName)
+        if (logoResId != 0) {
+            val originalBmp = BitmapFactory.decodeResource(resources, logoResId)
+            if (originalBmp != null) {
+                val size = 110
+                val scaled = Bitmap.createScaledBitmap(originalBmp, size, size, true)
+                canvas.drawBitmap(scaled, (384f - size) / 2f, y, null)
+                y += size + 35f
+            }
+        } else {
+            y += 40f
         }
 
-        // Outer Double Rings
-        canvas.drawCircle(192f, y + 40f, 38f, emblemPaint)
-        canvas.drawCircle(192f, y + 40f, 34f, emblemPaint)
-
-        // Inner Fill Paint
-        val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.BLACK
-            style = Paint.Style.FILL
-            textAlign = Paint.Align.CENTER
-        }
-
-        // Base River Waves
-        canvas.drawLine(168f, y + 52f, 216f, y + 52f, emblemPaint)
-        canvas.drawLine(173f, y + 57f, 211f, y + 57f, emblemPaint)
-
-        // Star & Moon
-        fillPaint.textSize = 15f
-        canvas.drawText("★", 192f, y + 30f, fillPaint)
-        fillPaint.textSize = 24f
-        canvas.drawText("☽", 192f, y + 46f, fillPaint)
-
-        y += 90f
-
+        // Header Title
         paint.typeface = nastaleeq
-        paint.textSize = 21f
+        paint.textSize = 22f
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("پنجاب کیٹل مارکیٹ مینجمنٹ اینڈ ڈویلپمنٹ کمپنی", 192f, y, paint)
-        y += 38f
+        y += 65f
 
-        paint.textSize = 17f
+        paint.textSize = 19f
         fun drawRow(label: String, value: String) {
             paint.typeface = nastaleeq
             paint.textAlign = Paint.Align.RIGHT
             canvas.drawText(label, 370f, y, paint)
             paint.textAlign = Paint.Align.LEFT
             canvas.drawText(value, 14f, y, paint)
-            y += 28f
+            y += 50f
         }
 
         drawRow("ڈویژن", "فیصل آباد")
@@ -337,21 +447,24 @@ class MainActivity : ComponentActivity() {
         drawRow("نام ٹھیکیدار", "محمد اسماعیل")
         drawRow("نام آپریٹر", "M Yasir Hameed")
 
-        y += 5f
+        y += 20f
         paint.typeface = nastaleeq
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("رسید نمبر", 192f, y, paint)
-        y += 24f
+        y += 38f
         paint.typeface = Typeface.MONOSPACE
+        paint.textSize = 20f
         canvas.drawText(rNo, 192f, y, paint)
-        y += 28f
+        y += 48f
 
         paint.typeface = nastaleeq
+        paint.textSize = 19f
         canvas.drawText("تاریخ و وقت", 192f, y, paint)
-        y += 24f
+        y += 38f
         paint.typeface = Typeface.MONOSPACE
+        paint.textSize = 19f
         canvas.drawText(dateTimeStr, 192f, y, paint)
-        y += 25f
+        y += 45f
 
         fun drawDashedLine(currentY: Float) {
             val dashPaint = Paint().apply {
@@ -364,12 +477,12 @@ class MainActivity : ComponentActivity() {
         }
 
         drawDashedLine(y)
-        y += 26f
+        y += 45f
 
         paint.typeface = nastaleeq
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("فیس رسید", 192f, y, paint)
-        y += 26f
+        y += 45f
 
         paint.textAlign = Paint.Align.RIGHT
         canvas.drawText("فیس کی قسم", 370f, y, paint)
@@ -378,10 +491,10 @@ class MainActivity : ComponentActivity() {
         canvas.drawText("یونٹ", 160f, y, paint)
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("قیمت", 14f, y, paint)
-        y += 18f
+        y += 30f
 
         drawDashedLine(y)
-        y += 25f
+        y += 45f
 
         paint.textAlign = Paint.Align.RIGHT
         canvas.drawText(catName, 370f, y, paint)
@@ -391,10 +504,10 @@ class MainActivity : ComponentActivity() {
         canvas.drawText("$unitRate", 160f, y, paint)
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("$basePrice", 14f, y, paint)
-        y += 24f
+        y += 45f
 
         drawDashedLine(y)
-        y += 26f
+        y += 45f
 
         paint.typeface = nastaleeq
         paint.textAlign = Paint.Align.RIGHT
@@ -402,50 +515,51 @@ class MainActivity : ComponentActivity() {
         paint.typeface = Typeface.MONOSPACE
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("$pst", 14f, y, paint)
-        y += 28f
+        y += 50f
 
         paint.typeface = nastaleeq
-        paint.textSize = 21f
+        paint.textSize = 23f
         paint.textAlign = Paint.Align.RIGHT
         canvas.drawText("کل", 370f, y, paint)
         paint.typeface = Typeface.MONOSPACE
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("$total", 14f, y, paint)
-        y += 30f
+        y += 55f
 
         drawDashedLine(y)
-        y += 28f
+        y += 50f
 
         paint.typeface = nastaleeq
-        paint.textSize = 17f
+        paint.textSize = 19f
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("جاری کردہ توسط", 192f, y, paint)
-        y += 26f
+        y += 42f
         paint.typeface = Typeface.DEFAULT_BOLD
-        paint.textSize = 18f
+        paint.textSize = 20f
         canvas.drawText("M Yasir Hameed", 192f, y, paint)
-        y += 30f
+        y += 55f
 
         paint.typeface = nastaleeq
-        paint.textSize = 22f
+        paint.textSize = 24f
         canvas.drawText("اداشدہ", 192f, y, paint)
-        y += 34f
+        y += 60f
 
-        paint.textSize = 16f
+        paint.textSize = 17f
         canvas.drawText("1233 : ہیلپ لائن", 192f, y, paint)
-        y += 24f
+        y += 40f
         canvas.drawText("+92 323 1233000 : واٹس ایپ", 192f, y, paint)
-        y += 24f
+        y += 40f
         canvas.drawText("31.215677, 72.355752 : GPS مقام", 192f, y, paint)
-        y += 28f
+        y += 48f
 
         canvas.drawText("شکریہ", 192f, y, paint)
-        y += 26f
+        y += 45f
 
         paint.typeface = Typeface.MONOSPACE
         canvas.drawText("Powered by PCMMDC", 192f, y, paint)
-        y += 45f
+        y += 65f
 
+        // ESC/POS Raster Print
         val cropped = Bitmap.createBitmap(bmp, 0, 0, 384, y.toInt())
         val stream = ByteArrayOutputStream()
         stream.write(byteArrayOf(0x1B, 0x40))
@@ -476,7 +590,7 @@ class MainActivity : ComponentActivity() {
                 stream.write(slice)
             }
         }
-        stream.write(byteArrayOf(0x1B, 0x64, 0x03))
+        stream.write(byteArrayOf(0x1B, 0x64, 0x04))
 
         try {
             outputStream?.write(stream.toByteArray())
