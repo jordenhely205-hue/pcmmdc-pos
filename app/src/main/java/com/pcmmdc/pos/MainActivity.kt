@@ -267,7 +267,7 @@ class MainActivity : ComponentActivity() {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            if (isShortSlip) "پرچی سائز: مختصر (15-16 cm)" else "پرچی سائز: لمبی (26.5 cm)",
+                            if (isShortSlip) "پرچی سائز: مختصر (16 cm)" else "پرچی سائز: لمبی (27 cm)",
                             fontWeight = FontWeight.Bold
                         )
                         Switch(
@@ -419,9 +419,9 @@ class MainActivity : ComponentActivity() {
             return@withContext
         }
 
-        // Calibrated heights: Long = 26.5 cm (~2120 px), Short = 15.5 cm (~1240 px)
-        val sf = if (isShort) 0.58f else 1.0f
-        val maxCanvasH = if (isShort) 1300 else 2200
+        // Calibrated scaling: Long = exact 27.0 cm (2160 px), Short = exact 16.0 cm (1280 px)
+        val sf = if (isShort) 0.592f else 1.0f
+        val maxCanvasH = if (isShort) 1350 else 2250
 
         val bmp = Bitmap.createBitmap(384, maxCanvasH, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
@@ -438,14 +438,14 @@ class MainActivity : ComponentActivity() {
             Typeface.DEFAULT_BOLD
         }
 
-        var y = 35f * sf + 12f
+        var y = 36f * sf + 12f
 
-        // Natural and Clean Logo Rendering
+        // Natural, clear and balanced logo rendering
         val logoResId = resources.getIdentifier("logo", "drawable", packageName)
         if (logoResId != 0) {
             val originalBmp = BitmapFactory.decodeResource(resources, logoResId)
             if (originalBmp != null) {
-                val size = if (isShort) 95 else 115
+                val size = if (isShort) 96 else 116
                 val scaled = Bitmap.createScaledBitmap(originalBmp, size, size, true)
                 canvas.drawBitmap(scaled, (384f - size) / 2f, y, null)
                 y += size + (38f * sf)
@@ -459,7 +459,7 @@ class MainActivity : ComponentActivity() {
         paint.textSize = 22f
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("پنجاب کیٹل مارکیٹ مینجمنٹ اینڈ ڈویلپمنٹ کمپنی", 192f, y, paint)
-        y += 74f * sf
+        y += 75f * sf
 
         paint.textSize = 19.5f
         fun drawRow(label: String, value: String) {
@@ -468,7 +468,7 @@ class MainActivity : ComponentActivity() {
             canvas.drawText(label, 370f, y, paint)
             paint.textAlign = Paint.Align.LEFT
             canvas.drawText(value, 14f, y, paint)
-            y += 56f * sf
+            y += 57f * sf
         }
 
         drawRow("ڈویژن", "فیصل آباد")
@@ -480,20 +480,20 @@ class MainActivity : ComponentActivity() {
         paint.typeface = nastaleeq
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("رسید نمبر", 192f, y, paint)
-        y += 42f * sf
+        y += 43f * sf
         paint.typeface = Typeface.MONOSPACE
         paint.textSize = 20.5f
         canvas.drawText(rNo, 192f, y, paint)
-        y += 55f * sf
+        y += 56f * sf
 
         paint.typeface = nastaleeq
         paint.textSize = 19.5f
         canvas.drawText("تاریخ و وقت", 192f, y, paint)
-        y += 42f * sf
+        y += 43f * sf
         paint.typeface = Typeface.MONOSPACE
         paint.textSize = 19.5f
         canvas.drawText(dateTimeStr, 192f, y, paint)
-        y += 50f * sf
+        y += 51f * sf
 
         fun drawDashedLine(currentY: Float) {
             val dashPaint = Paint().apply {
@@ -506,12 +506,12 @@ class MainActivity : ComponentActivity() {
         }
 
         drawDashedLine(y)
-        y += 50f * sf
+        y += 51f * sf
 
         paint.typeface = nastaleeq
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("فیس رسید", 192f, y, paint)
-        y += 50f * sf
+        y += 51f * sf
 
         paint.textAlign = Paint.Align.RIGHT
         canvas.drawText("فیس کی قسم", 370f, y, paint)
@@ -520,10 +520,10 @@ class MainActivity : ComponentActivity() {
         canvas.drawText("یونٹ", 160f, y, paint)
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("قیمت", 14f, y, paint)
-        y += 36f * sf
+        y += 37f * sf
 
         drawDashedLine(y)
-        y += 50f * sf
+        y += 51f * sf
 
         paint.textAlign = Paint.Align.RIGHT
         canvas.drawText(catName, 370f, y, paint)
@@ -531,12 +531,12 @@ class MainActivity : ComponentActivity() {
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("$qty", 245f, y, paint)
         canvas.drawText("$unitRate", 160f, y, paint)
-        paint.textAlign = Paint.Align.LEFT
+        paint.textAlign = Paint.LEFT
         canvas.drawText("$basePrice", 14f, y, paint)
-        y += 52f * sf
+        y += 53f * sf
 
         drawDashedLine(y)
-        y += 50f * sf
+        y += 51f * sf
 
         paint.typeface = nastaleeq
         paint.textAlign = Paint.Align.RIGHT
@@ -544,7 +544,7 @@ class MainActivity : ComponentActivity() {
         paint.typeface = Typeface.MONOSPACE
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("$pst", 14f, y, paint)
-        y += 58f * sf
+        y += 59f * sf
 
         paint.typeface = nastaleeq
         paint.textSize = 23.5f
@@ -553,42 +553,42 @@ class MainActivity : ComponentActivity() {
         paint.typeface = Typeface.MONOSPACE
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("$total", 14f, y, paint)
-        y += 62f * sf
+        y += 64f * sf
 
         drawDashedLine(y)
-        y += 58f * sf
+        y += 59f * sf
 
         paint.typeface = nastaleeq
         paint.textSize = 19.5f
         paint.textAlign = Paint.Align.CENTER
         canvas.drawText("جاری کردہ توسط", 192f, y, paint)
-        y += 46f * sf
+        y += 47f * sf
         paint.typeface = Typeface.DEFAULT_BOLD
         paint.textSize = 20.5f
         canvas.drawText(operatorName, 192f, y, paint)
-        y += 62f * sf
+        y += 63f * sf
 
         paint.typeface = nastaleeq
         paint.textSize = 24.5f
         canvas.drawText("اداشدہ", 192f, y, paint)
-        y += 66f * sf
+        y += 68f * sf
 
         paint.textSize = 17.5f
         canvas.drawText("1233 : ہیلپ لائن", 192f, y, paint)
-        y += 45f * sf
+        y += 46f * sf
         canvas.drawText("+92 323 1233000 : واٹس ایپ", 192f, y, paint)
-        y += 45f * sf
+        y += 46f * sf
         canvas.drawText("31.215677, 72.355752 : GPS مقام", 192f, y, paint)
-        y += 52f * sf
+        y += 53f * sf
 
         canvas.drawText("شکریہ", 192f, y, paint)
-        y += 48f * sf
+        y += 49f * sf
 
         paint.typeface = Typeface.MONOSPACE
         canvas.drawText("Powered by PCMMDC", 192f, y, paint)
-        y += 62f * sf
+        y += 64f * sf
 
-        // Crop to exact calculated content height
+        // Exact crop to content
         val targetHeight = y.toInt().coerceAtMost(maxCanvasH)
         val cropped = Bitmap.createBitmap(bmp, 0, 0, 384, targetHeight)
         val stream = ByteArrayOutputStream()
@@ -604,7 +604,7 @@ class MainActivity : ComponentActivity() {
 
         stream.write(byteArrayOf(0x1D, 0x76, 0x30, 0x00, xL, xH, yL, yH))
 
-        // Balanced luminance threshold (150) for sharp lines without smudging
+        // Clean contrast thresholding (lum < 135) to prevent over-bold smudging
         for (row in 0 until height) {
             for (colByte in 0 until widthBytes) {
                 var slice = 0
@@ -613,9 +613,9 @@ class MainActivity : ComponentActivity() {
                     if (px < 384) {
                         val pixel = cropped.getPixel(px, row)
                         val alpha = Color.alpha(pixel)
-                        if (alpha > 40) {
+                        if (alpha > 50) {
                             val lum = (0.299 * Color.red(pixel) + 0.587 * Color.green(pixel) + 0.114 * Color.blue(pixel)).toInt()
-                            if (lum < 150) {
+                            if (lum < 135) {
                                 slice = slice or (1 shl (7 - b))
                             }
                         }
